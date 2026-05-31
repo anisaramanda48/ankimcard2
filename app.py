@@ -400,14 +400,11 @@ if st.session_state.mode == "flashcard":
             <span class="badge badge-lupa">❌ Lupa: {st.session_state.score_lupa}</span>
         </div>""", unsafe_allow_html=True)
 
-        # ── KARTU INTERAKTIF — klik langsung flip, tanpa tombol ekstra ──
+        # ── KARTU INTERAKTIF — tombol Streamlit transparan menutupi kartu ──
         flip_class = "flipped" if st.session_state.flipped else ""
-        # Escape single-quote dalam teks agar tidak merusak JS
-        q_safe = card['front'].replace("'", "\\'")
-        a_safe = card['back'].replace("'", "\\'")
 
         card_html = f"""
-        <div class="flashcard-wrap" onclick="toggleFlip()" title="Ketuk untuk lihat jawaban">
+        <div class="flashcard-wrap" id="fc-wrap">
             <div class="flashcard-inner {flip_class}" id="fc-inner">
                 <div class="flashcard-face flashcard-front">
                     <div class="fc-label">— Pertanyaan —</div>
@@ -420,17 +417,39 @@ if st.session_state.mode == "flashcard":
                 </div>
             </div>
         </div>
-        <script>
-        function toggleFlip() {{
-            var el = document.getElementById('fc-inner');
-            el.classList.toggle('flipped');
-        }}
-        </script>
         """
         st.markdown(card_html, unsafe_allow_html=True)
 
+        # Tombol flip transparan — terlihat seperti kartu bisa diklik
+        st.markdown("""
+        <style>
+        div[data-testid="stButton"]:has(button#flip-card-btn) button {
+            background: transparent !important;
+            border: none !important;
+            color: transparent !important;
+            position: relative;
+            margin-top: -300px;
+            height: 290px;
+            width: 100%;
+            cursor: pointer;
+            box-shadow: none !important;
+            border-radius: 20px !important;
+        }
+        div[data-testid="stButton"]:has(button#flip-card-btn) button:hover {
+            background: rgba(26,74,122,0.04) !important;
+            box-shadow: none !important;
+            transform: none !important;
+        }
+        </style>
+        """, unsafe_allow_html=True)
+
+        if st.button(" ", key="flip-card-btn", use_container_width=True):
+            st.session_state.flipped = not st.session_state.flipped
+            st.rerun()
+
         st.markdown("<div style='height:0.3rem'></div>", unsafe_allow_html=True)
-        st.markdown("<div style='text-align:center;font-size:0.8rem;color:var(--text2);margin-bottom:0.5rem'>Setelah lihat jawaban, pilih:</div>", unsafe_allow_html=True)
+        hint_text = "👆 Klik kartu di atas, lalu pilih:" if not st.session_state.flipped else "Sudah lihat jawaban? Pilih:"
+        st.markdown(f"<div style='text-align:center;font-size:0.8rem;color:var(--text2);margin-bottom:0.5rem'>{hint_text}</div>", unsafe_allow_html=True)
 
         c1, c2 = st.columns(2)
         with c1:
